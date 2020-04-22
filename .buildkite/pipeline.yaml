@@ -1,0 +1,41 @@
+steps:
+  - label: ':package: build'
+    command: "build"
+    plugins:
+      - docker#v3.3.0:
+          image: buildtool/build-tools
+          environment:
+            - "BUILDTOOLS_CONTENT"
+            - "KUBECONFIG_CONTENT_BASE64"
+          always-pull: true
+          volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+          propagate-environment: true
+
+  - wait: ~
+
+  - label: ':whale: push image'
+    command:  "push"
+    plugins:
+      - docker#v3.3.0:
+          environment:
+            - "BUILDTOOLS_CONTENT"
+            - "KUBECONFIG_CONTENT_BASE64"
+          image: buildtool/build-tools
+          volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+          propagate-environment: true
+
+  - wait: ~
+
+  - label: ':shipit: Deploy test'
+    command: 'deploy -t=7m test'
+    plugins:
+      - docker#v3.3.0:
+          environment:
+            - "BUILDTOOLS_CONTENT"
+            - "KUBECONFIG_CONTENT_BASE64"
+          image: buildtool/build-tools
+          volumes:
+            - "/var/run/docker.sock:/var/run/docker.sock"
+          propagate-environment: true
